@@ -40,12 +40,6 @@ npm test        # requires Node.js 18+
 - Reporter: `reporter@campus.test` / `reporter123`
 - Admin: `admin@campus.test` / `admin123`
 
-## Sprint 1 status (23-29 Nov)
-- [x] US-01 Log in
-- [x] US-02 Complaint form (category, location, description)
-- [x] US-03 List of my complaints
-- [x] CI workflow draft (SCRUM-8): lint, test, build on every push and pull request
-
 ## Project structure
 ```
 index.html        page shell
