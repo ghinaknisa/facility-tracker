@@ -1,0 +1,11 @@
+{
+  "name": "facility-service-request-system",
+  "version": "0.1.0",
+  "description": "Web-based system for submitting, tracking, and resolving campus facility complaints.",
+  "scripts": {
+    "lint": "node --check js/store.js && node --check js/app.js",
+    "test": "node --test",
+    "build": "echo \"Static site: nothing to build\""
+  },
+  "license": "MIT"
+}
