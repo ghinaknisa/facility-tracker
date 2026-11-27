@@ -82,3 +82,20 @@ th,td{padding:11px 10px;border-bottom:1px solid var(--line)}tbody tr{transition:
  .bar{grid-template-columns:100px 1fr 24px}
 }
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* Final build additions */
+.sm{padding:6px 12px;font-size:13px;border-radius:10px}
+.sel{display:inline-block;width:auto;margin:0;padding:6px 8px;font-size:13px;border-radius:10px}
+.tabs{display:flex;gap:6px;margin-bottom:16px}.tabs button{flex:1;padding:8px;border:1px solid var(--line);background:var(--cream);border-radius:10px;font:600 14px var(--sans);color:var(--ink);cursor:pointer}
+.tabs button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.banner{padding:10px 12px;border-radius:12px;background:rgba(193,18,31,.08);margin-bottom:14px}
+.filters{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px}.filters .sel{min-width:130px}
+.tl{list-style:none;margin:12px 0 0;padding:0;display:grid;gap:6px;font-size:13px;color:var(--muted)}.tl li::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--blue);margin-right:8px}
+.actions{display:flex;gap:6px;flex-wrap:wrap}.photo{color:var(--ink);font-weight:600;font-size:13px}
+.meta{font-size:13px;color:var(--muted);margin:4px 0 10px}.form-row{display:grid;gap:10px}
+
+.nw{white-space:nowrap}
+
+.btn.block{width:100%;justify-content:center}
+.or{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:13px;margin:14px 0}.or::before,.or::after{content:"";flex:1;height:1px;background:var(--line)}
+.forgot{text-align:right;margin:-6px 0 14px}.linkish{background:none;border:0;padding:0;color:var(--ink);text-decoration:underline;cursor:pointer;font:600 13px var(--sans)}
