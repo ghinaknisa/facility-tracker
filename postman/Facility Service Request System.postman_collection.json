@@ -1,0 +1,1484 @@
+{
+  "info": {
+    "name": "Facility Service Request System - API Validation",
+    "description": "Validates the Supabase Auth and REST (PostgREST) API: CRUD, Row Level Security and database triggers. Run the whole collection with the Collection Runner, in order.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. Authentication",
+      "item": [
+        {
+          "name": "Login as reporter",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "apikey",
+                "value": "{{anon_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/auth/v1/token?grant_type=password",
+            "description": "Signs in the reporter account and saves its token.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{reporter_email}}\",\n  \"password\": \"{{reporter_password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () { pm.response.to.have.status(200); });",
+                  "const j = pm.response.json();",
+                  "pm.test(\"Response contains an access token\", function () { pm.expect(j.access_token).to.be.a(\"string\").and.not.empty; });",
+                  "pm.environment.set(\"reporter_token\", j.access_token);",
+                  "pm.environment.set(\"reporter_id\", j.user.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login as admin",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "apikey",
+                "value": "{{anon_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/auth/v1/token?grant_type=password",
+            "description": "Signs in the admin account and saves its token.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{admin_email}}\",\n  \"password\": \"{{admin_password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () { pm.response.to.have.status(200); });",
+                  "const j = pm.response.json();",
+                  "pm.test(\"Response contains an access token\", function () { pm.expect(j.access_token).to.be.a(\"string\").and.not.empty; });",
+                  "pm.environment.set(\"admin_token\", j.access_token);",
+                  "pm.environment.set(\"admin_id\", j.user.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login as technician",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "apikey",
+                "value": "{{anon_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/auth/v1/token?grant_type=password",
+            "description": "Signs in the technician account and saves its token.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{technician_email}}\",\n  \"password\": \"{{technician_password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () { pm.response.to.have.status(200); });",
+                  "const j = pm.response.json();",
+                  "pm.test(\"Response contains an access token\", function () { pm.expect(j.access_token).to.be.a(\"string\").and.not.empty; });",
+                  "pm.environment.set(\"technician_token\", j.access_token);",
+                  "pm.environment.set(\"technician_id\", j.user.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login with wrong password is rejected",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "apikey",
+                "value": "{{anon_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/auth/v1/token?grant_type=password",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{reporter_email}}\",\n  \"password\": \"definitely-wrong\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 400\", function () { pm.response.to.have.status(400); });",
+                  "pm.test(\"No access token is returned\", function () { pm.expect(pm.response.json().access_token).to.be.undefined; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Anonymous user cannot read complaints",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "apikey",
+                "value": "{{anon_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/rest/v1/complaints?select=*",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Anonymous request is blocked or returns no rows\", function () { if (pm.response.code === 200) { pm.expect(pm.response.json()).to.have.lengthOf(0); } else { pm.expect([401,403]).to.include(pm.response.code); } });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "2. Categories",
+      "item": [
+        {
+          "name": "List categories (reporter)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "apikey",
+                "value": "{{anon_key}}"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{reporter_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/rest/v1/categories?select=*&is_active=eq.true&order=name.asc",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () { pm.response.to.have.status(200); });",
+                  "const rows = pm.response.json();",
+                  "pm.test(\"Seed categories exist\", function () { pm.expect(rows.length).to.be.at.least(1); });",
+                  "pm.environment.set(\"category_id\", rows[0].category_id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reporter cannot create a category (RLS)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "apikey",
+                "value": "{{anon_key}}"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{reporter_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/rest/v1/categories",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Hacked category\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is one of [401, 403]\", function () { pm.expect([401, 403]).to.include(pm.response.code); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Admin creates a category",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "apikey",
+                "value": "{{anon_key}}"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Prefer",
+                "value": "return=representation"
+              }
+            ],
+            "url": "{{base_url}}/rest/v1/categories",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"{{new_category_name}}\",\n  \"description\": \"Created by Postman\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 201\", function () { pm.response.to.have.status(201); });",
+                  "const rows = pm.response.json();",
+                  "pm.test(\"Category is created and active\", function () { pm.expect(rows[0].name).to.eql(pm.environment.get(\"new_category_name\")); pm.expect(rows[0].is_active).to.eql(true); });",
+                  "pm.environment.set(\"new_category_id\", rows[0].category_id);"
+                ]
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.environment.set(\"new_category_name\", \"Test Category \" + Date.now());"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Admin renames the category",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "apikey",
+                "value": "{{anon_key}}"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Prefer",
+                "value": "return=representation"
+              }
+            ],
+            "url": "{{base_url}}/rest/v1/categories?category_id=eq.{{new_category_id}}",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Renamed by Postman\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () { pm.response.to.have.status(200); });",
+                  "const rows = pm.response.json();",
+                  "pm.test(\"Name is updated\", function () { pm.expect(rows[0].name).to.eql(\"Renamed by Postman\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Duplicate category name is rejected (UNIQUE)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "apikey",
+                "value": "{{anon_key}}"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/rest/v1/categories",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Renamed by Postman\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 409\", function () { pm.response.to.have.status(409); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "3. Complaints: create and read",
+      "item": [
+        {
+          "name": "Reporter creates a complaint",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "apikey",
+                "value": "{{anon_key}}"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{reporter_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Prefer",
+                "value": "return=representation"
+              }
+            ],
+            "url": "{{base_url}}/rest/v1/complaints",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reporter_id\": \"{{reporter_id}}\",\n  \"category_id\": \"{{category_id}}\",\n  \"location\": \"Building B, Room 204 (API test)\",\n  \"description\": \"Ceiling lamp flickers when switched on (API test).\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 201\", function () { pm.response.to.have.status(201); });",
+                  "const rows = pm.response.json();",
+                  "const c = rows[0];",
+                  "pm.test(\"Ticket code is generated\", function () { pm.expect(c.ticket_code).to.match(/^FC-\\d{3,}$/); });",
+                  "pm.test(\"Status starts as New and priority is empty\", function () { pm.expect(c.status).to.eql(\"New\"); pm.expect(c.priority).to.be.null; });",
+                  "pm.test(\"Reporter is the logged-in user\", function () { pm.expect(c.reporter_id).to.eql(pm.environment.get(\"reporter_id\")); });",
+                  "pm.environment.set(\"complaint_id\", c.complaint_id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Complaint with a too-short description is rejected (CHECK)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "apikey",
+                "value": "{{anon_key}}"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{reporter_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/rest/v1/complaints",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reporter_id\": \"{{reporter_id}}\",\n  \"category_id\": \"{{category_id}}\",\n  \"location\": \"Room 1\",\n  \"description\": \"short\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 400\", function () { pm.response.to.have.status(400); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reporter cannot create a pre-resolved complaint (RLS)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "apikey",
+                "value": "{{anon_key}}"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{reporter_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/rest/v1/complaints",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reporter_id\": \"{{reporter_id}}\",\n  \"category_id\": \"{{category_id}}\",\n  \"location\": \"Room 2\",\n  \"description\": \"Trying to skip the workflow\",\n  \"status\": \"Resolved\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is one of [401, 403]\", function () { pm.expect([401, 403]).to.include(pm.response.code); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reporter cannot create a complaint for someone else (RLS)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "apikey",
+                "value": "{{anon_key}}"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{reporter_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/rest/v1/complaints",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reporter_id\": \"{{admin_id}}\",\n  \"category_id\": \"{{category_id}}\",\n  \"location\": \"Room 3\",\n  \"description\": \"Pretending to be another user\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is one of [401, 403]\", function () { pm.expect([401, 403]).to.include(pm.response.code); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reporter lists only own complaints",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "apikey",
+                "value": "{{anon_key}}"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{reporter_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/rest/v1/complaints?select=*&order=created_at.desc",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () { pm.response.to.have.status(200); });",
+                  "const rows = pm.response.json();",
+                  "pm.test(\"Every row belongs to the reporter\", function () { rows.forEach(function (r) { pm.expect(r.reporter_id).to.eql(pm.environment.get(\"reporter_id\")); }); });",
+                  "pm.test(\"New complaint is listed\", function () { pm.expect(rows.map(function (r) { return r.complaint_id; })).to.include(Number(pm.environment.get(\"complaint_id\"))); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reporter edits own New complaint",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "apikey",
+                "value": "{{anon_key}}"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{reporter_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Prefer",
+                "value": "return=representation"
+              }
+            ],
+            "url": "{{base_url}}/rest/v1/complaints?complaint_id=eq.{{complaint_id}}",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"location\": \"Building B, 3rd floor (API test)\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () { pm.response.to.have.status(200); });",
+                  "const rows = pm.response.json();",
+                  "pm.test(\"Location is updated\", function () { pm.expect(rows[0].location).to.include(\"3rd floor\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reporter cannot change status (trigger)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "apikey",
+                "value": "{{anon_key}}"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{reporter_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/rest/v1/complaints?complaint_id=eq.{{complaint_id}}",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"Resolved\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 400\", function () { pm.response.to.have.status(400); });",
+                  "pm.test(\"Error message mentions: Reporters can only edit\", function () { pm.expect(JSON.stringify(pm.response.json())).to.include(\"Reporters can only edit\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reporter cannot set priority (trigger)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "apikey",
+                "value": "{{anon_key}}"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{reporter_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/rest/v1/complaints?complaint_id=eq.{{complaint_id}}",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"priority\": \"High\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 400\", function () { pm.response.to.have.status(400); });",
+                  "pm.test(\"Error message mentions: Reporters can only edit\", function () { pm.expect(JSON.stringify(pm.response.json())).to.include(\"Reporters can only edit\"); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "4. Admin: prioritize and assign",
+      "item": [
+        {
+          "name": "Admin lists all complaints",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "apikey",
+                "value": "{{anon_key}}"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/rest/v1/complaints?select=*&order=created_at.desc",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () { pm.response.to.have.status(200); });",
+                  "const rows = pm.response.json();",
+                  "pm.test(\"Admin sees the reporter complaint\", function () { pm.expect(rows.map(function (r) { return r.complaint_id; })).to.include(Number(pm.environment.get(\"complaint_id\"))); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Admin sets priority and assigns a technician",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "apikey",
+                "value": "{{anon_key}}"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Prefer",
+                "value": "return=representation"
+              }
+            ],
+            "url": "{{base_url}}/rest/v1/complaints?complaint_id=eq.{{complaint_id}}",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"priority\": \"High\",\n  \"assigned_to\": \"{{technician_id}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () { pm.response.to.have.status(200); });",
+                  "const rows = pm.response.json();",
+                  "pm.test(\"Priority and technician are saved\", function () { pm.expect(rows[0].priority).to.eql(\"High\"); pm.expect(rows[0].assigned_to).to.eql(pm.environment.get(\"technician_id\")); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Admin cannot assign a non-technician (trigger)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "apikey",
+                "value": "{{anon_key}}"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/rest/v1/complaints?complaint_id=eq.{{complaint_id}}",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"assigned_to\": \"{{reporter_id}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 400\", function () { pm.response.to.have.status(400); });",
+                  "pm.test(\"Error message mentions: active technician\", function () { pm.expect(JSON.stringify(pm.response.json())).to.include(\"active technician\"); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "5. Technician: update status",
+      "item": [
+        {
+          "name": "Technician lists only assigned complaints",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "apikey",
+                "value": "{{anon_key}}"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{technician_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/rest/v1/complaints?select=*",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () { pm.response.to.have.status(200); });",
+                  "const rows = pm.response.json();",
+                  "pm.test(\"Every row is assigned to the technician\", function () { rows.forEach(function (r) { pm.expect(r.assigned_to).to.eql(pm.environment.get(\"technician_id\")); }); });",
+                  "pm.test(\"Assigned complaint is visible\", function () { pm.expect(rows.map(function (r) { return r.complaint_id; })).to.include(Number(pm.environment.get(\"complaint_id\"))); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Technician cannot change priority (trigger)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "apikey",
+                "value": "{{anon_key}}"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{technician_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/rest/v1/complaints?complaint_id=eq.{{complaint_id}}",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"priority\": \"Low\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 400\", function () { pm.response.to.have.status(400); });",
+                  "pm.test(\"Error message mentions: Technicians can only update the status\", function () { pm.expect(JSON.stringify(pm.response.json())).to.include(\"Technicians can only update the status\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Technician sets status to In Progress",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "apikey",
+                "value": "{{anon_key}}"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{technician_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Prefer",
+                "value": "return=representation"
+              }
+            ],
+            "url": "{{base_url}}/rest/v1/complaints?complaint_id=eq.{{complaint_id}}",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"In Progress\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () { pm.response.to.have.status(200); });",
+                  "const rows = pm.response.json();",
+                  "pm.test(\"Status is In Progress\", function () { pm.expect(rows[0].status).to.eql(\"In Progress\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Technician sets status to Resolved",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "apikey",
+                "value": "{{anon_key}}"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{technician_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Prefer",
+                "value": "return=representation"
+              }
+            ],
+            "url": "{{base_url}}/rest/v1/complaints?complaint_id=eq.{{complaint_id}}",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"Resolved\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () { pm.response.to.have.status(200); });",
+                  "const rows = pm.response.json();",
+                  "pm.test(\"Status is Resolved and resolved_at is set\", function () { pm.expect(rows[0].status).to.eql(\"Resolved\"); pm.expect(rows[0].resolved_at).to.not.be.null; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Technician cannot move back to New (trigger)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "apikey",
+                "value": "{{anon_key}}"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{technician_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/rest/v1/complaints?complaint_id=eq.{{complaint_id}}",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"New\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 400\", function () { pm.response.to.have.status(400); });",
+                  "pm.test(\"Error message mentions: back to New\", function () { pm.expect(JSON.stringify(pm.response.json())).to.include(\"back to New\"); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "6. History, profiles and security",
+      "item": [
+        {
+          "name": "Status timeline is recorded automatically",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "apikey",
+                "value": "{{anon_key}}"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{reporter_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/rest/v1/complaint_status_history?complaint_id=eq.{{complaint_id}}&order=changed_at.asc",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () { pm.response.to.have.status(200); });",
+                  "const rows = pm.response.json();",
+                  "pm.test(\"Timeline is New, In Progress, Resolved\", function () { pm.expect(rows.map(function (r) { return r.new_status; })).to.eql([\"New\",\"In Progress\",\"Resolved\"]); pm.expect(rows[0].old_status).to.be.null; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reporter cannot delete a resolved complaint (RLS)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "apikey",
+                "value": "{{anon_key}}"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{reporter_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Prefer",
+                "value": "return=representation"
+              }
+            ],
+            "url": "{{base_url}}/rest/v1/complaints?complaint_id=eq.{{complaint_id}}",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () { pm.response.to.have.status(200); });",
+                  "const rows = pm.response.json();",
+                  "pm.test(\"No row was deleted\", function () { pm.expect(rows).to.have.lengthOf(0); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reporter reads own profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "apikey",
+                "value": "{{anon_key}}"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{reporter_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/rest/v1/profiles?select=*&user_id=eq.{{reporter_id}}",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () { pm.response.to.have.status(200); });",
+                  "const rows = pm.response.json();",
+                  "pm.test(\"One profile with role reporter\", function () { pm.expect(rows).to.have.lengthOf(1); pm.expect(rows[0].role).to.eql(\"reporter\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reporter cannot promote self to admin (trigger resets role)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "apikey",
+                "value": "{{anon_key}}"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{reporter_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Prefer",
+                "value": "return=representation"
+              }
+            ],
+            "url": "{{base_url}}/rest/v1/profiles?user_id=eq.{{reporter_id}}",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"role\": \"admin\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () { pm.response.to.have.status(200); });",
+                  "const rows = pm.response.json();",
+                  "pm.test(\"Role is still reporter\", function () { pm.expect(rows[0].role).to.eql(\"reporter\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reporter does not see other reporters (RLS)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "apikey",
+                "value": "{{anon_key}}"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{reporter_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/rest/v1/profiles?select=user_id,role",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () { pm.response.to.have.status(200); });",
+                  "const rows = pm.response.json();",
+                  "pm.test(\"Only own row and staff rows are visible\", function () { rows.forEach(function (r) { pm.expect(r.user_id === pm.environment.get(\"reporter_id\") || [\"admin\",\"technician\"].indexOf(r.role) >= 0).to.be.true; }); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Admin lists all profiles",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "apikey",
+                "value": "{{anon_key}}"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/rest/v1/profiles?select=*",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () { pm.response.to.have.status(200); });",
+                  "const rows = pm.response.json();",
+                  "pm.test(\"Admin sees reporter, technician and admin\", function () { var roles = rows.map(function (r) { return r.role; }); [\"reporter\",\"technician\",\"admin\"].forEach(function (x) { pm.expect(roles).to.include(x); }); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "7. Cleanup",
+      "item": [
+        {
+          "name": "Admin deletes the test complaint",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "apikey",
+                "value": "{{anon_key}}"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/rest/v1/complaints?complaint_id=eq.{{complaint_id}}",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 204\", function () { pm.response.to.have.status(204); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Deleted complaint no longer exists",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "apikey",
+                "value": "{{anon_key}}"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/rest/v1/complaints?complaint_id=eq.{{complaint_id}}",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () { pm.response.to.have.status(200); });",
+                  "const rows = pm.response.json();",
+                  "pm.test(\"No rows returned\", function () { pm.expect(rows).to.have.lengthOf(0); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Admin deletes the test category",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "apikey",
+                "value": "{{anon_key}}"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/rest/v1/categories?category_id=eq.{{new_category_id}}",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 204\", function () { pm.response.to.have.status(204); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

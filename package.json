@@ -1,9 +1,9 @@
 {
   "name": "facility-service-request-system",
-  "version": "0.1.0",
-  "description": "Web-based system for submitting, tracking, and resolving campus facility complaints.",
+  "version": "1.0.0",
+  "description": "Web-based system for submitting, tracking, and resolving campus facility complaints (Supabase + vanilla JavaScript).",
   "scripts": {
-    "lint": "node --check js/store.js && node --check js/app.js",
+    "lint": "node --check js/store.js && node --check js/api.js && node --check js/app.js && node --check js/config.js",
     "test": "node --test",
     "build": "echo \"Static site: nothing to build\""
   },
